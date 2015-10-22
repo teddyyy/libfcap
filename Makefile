@@ -3,7 +3,7 @@ AR		= mips-openwrt-linux-ar
 
 TARGET	= libfcap.a
 
-OBJS 	= init.o core.o interface.o tun.o common.o monitor.o radiotap.o
+OBJS 	= init.o core.o interface.o tun.o utils.o monitor.o radiotap.o
 SRCS 	= $(OBJS:.o=.c)
 
 # Path

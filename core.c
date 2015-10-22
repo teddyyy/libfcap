@@ -8,6 +8,7 @@
 #include "core.h"
 #include "interface.h"
 #include "tun.h"
+#include "monitor.h"
 #include "radiotap.h"
 
 struct event_arg {
@@ -17,7 +18,7 @@ struct event_arg {
 
 /* Monitor interface frame send/recv function */
 // pkt encapsulated 802.11 header
-int mi_send_frame(void *buf, size_t count, int rate)
+int core_mi_send_frame(void *buf, size_t count, int rate)
 {
 	struct mif *mi = _mi_out;
 	struct tx_info txinfo;
@@ -31,7 +32,8 @@ int mi_send_frame(void *buf, size_t count, int rate)
 }
 
 // pktin --> mon --> frame translate --> tap
-void mi_recv_frame(u_char *argc, const struct pcap_pkthdr *pkthdr, const u_char *pkt)
+static void core_mi_recv_frame(u_char *argc, 
+					const struct pcap_pkthdr *pkthdr, const u_char *pkt)
 {
 	unsigned char buf[4096];
    	int n, len, bytes, n80211HeaderLength = HEADERLENGTH;
@@ -75,18 +77,17 @@ void mi_recv_frame(u_char *argc, const struct pcap_pkthdr *pkthdr, const u_char 
 			ri.rate / 2, 5*(ri.rate & 1), ri.channel, ri.power, ri.noise);
 
 	len = pkthdr->len;
-/*
-	if (_mfn->recv_mi_wireless_frame) {
+
+	if (_mfn->mon_frame_handler) {
 		_mfn->rate = ri.rate;
-		_mfn->recv_mi_wireless_frame(_mfn, buf, len, mi, ri.power);
+		_mfn->mon_frame_handler(_mfn, buf, len, mi, ri.power);
 	}
-*/
-	proto80211_packet_recv(_mfn, buf, len, mi, ri.power);
+
 }
 
 /* Tap interface frame send/recv function */
 // pkt encapsulated ether header
-int ti_send_frame(void *buf, size_t count)
+int core_ti_send_frame(void *buf, size_t count)
 {
 	struct tif *ti = _ti_in;
 
@@ -97,7 +98,7 @@ int ti_send_frame(void *buf, size_t count)
 }
 
 // pktin --> tap --> frame translate --> mon
-void ti_recv_frame(int fd, short event, void *arg)
+void core_ti_recv_frame(int fd, short event, void *arg)
 {
 	unsigned char buf[4096];
    	int len;
@@ -111,8 +112,8 @@ void ti_recv_frame(int fd, short event, void *arg)
 
 	len = ti->read(ti, buf, sizeof(buf));
 
-	if (_mfn->recv_ti_wireless_frame)
-		_mfn->recv_ti_wireless_frame(_mfn, buf, len, mi);
+	if (_mfn->mon_tx_tun_frame)
+		_mfn->mon_tx_tun_frame(_mfn, buf, len, mi);
 }
 
 /* Periodic function */
@@ -127,14 +128,14 @@ void periodic_func(int fd, short event, void *arg)
 		evtimer_add(&evarg->ev, &tv);
    	}
 
-	if (_mfn->wifi_ap_beacon)
-		_mfn->wifi_ap_beacon(_mfn);
+	if (_mfn->periodic_beacon)
+		_mfn->periodic_beacon(_mfn);
 }
 
 void* frame_monitor(void* arg)
 {
 	printf("%s\n", __func__);
-	pcap_loop(dev.fd_in, -1, mi_recv_frame, NULL);
+	pcap_loop(dev.fd_in, -1, core_mi_recv_frame, NULL);
 
 	return 0;
 }

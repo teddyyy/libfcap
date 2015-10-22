@@ -26,6 +26,6 @@ typedef u32 __le32;
 #define unlikely(x) (x)
 
 void* frame_monitor(void* arg);
-void mi_recv_frame(u_char *argc, const struct pcap_pkthdr *pkthdr, const u_char *pkt);
+int mi_send_frame(void *buf, size_t count, int rate);
 void ti_recv_frame(int fd, short event, void *arg);
 void periodic_func(int fd, short event, void *arg);

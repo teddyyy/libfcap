@@ -2,7 +2,7 @@
 #include <pcap.h>
 
 struct tx_info {
-   	unsigned int     ti_rate;
+   	unsigned int ti_rate;
 };
 
 struct rx_info {
@@ -16,11 +16,10 @@ struct rx_info {
 } __packed;
 
 struct mif {
-	int (*read)(struct mif *mi, unsigned char *h80211, int len,
-			struct rx_info *ri);
-	int (*write)(struct mif *mi, unsigned char *h80211, int len,
-			struct tx_info *ti);
-	void (*close)(struct mif *mi);
+	int (*read)(struct mif *mi, unsigned char *h80211, 
+				int len, struct rx_info *ri);
+	int (*write)(struct mif *mi, unsigned char *h80211, 
+				int len, struct tx_info *ti);
 
 	void *mi_priv;
 	char mi_interface[IFNAMSIZ];

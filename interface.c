@@ -11,7 +11,7 @@ struct priv_if {
 	int rate;
 };
 
-void *mi_priv(struct mif *mi)
+static void *mi_priv(struct mif *mi)
 {
    	return mi->mi_priv;
 }
@@ -116,7 +116,6 @@ struct mif *mi_open(char *iface)
 	if (!mi)
 		return NULL;
 
-	mi->close = mi_close;
 	mi->read  = mi_read;
 	mi->write = mi_write;
 
