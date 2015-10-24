@@ -35,25 +35,25 @@ int core_mi_send_frame(void *buf, size_t count, int rate)
 static void core_mi_recv_frame(u_char *argc, 
 					const struct pcap_pkthdr *pkthdr, const u_char *pkt)
 {
-	unsigned char buf[4096];
    	int n, len, bytes, n80211HeaderLength = HEADERLENGTH;
 	struct ieee80211_radiotap_iterator rti;
 	u16 hlen;
 	struct rx_info ri;
 	struct mif *mi = _mi_in;
-	const u_char *rtpkt = pkt;
+	const u_char *p, *rtpkt = pkt;
+
+	// restore pointer and length
+	p = rtpkt;
+	len = pkthdr->len;
 
 	// extract radiotap headder
-	// based on packetspammer by andy green
 	hlen = rtpkt[2] + (rtpkt[3] << 8);
-
 	bytes = pkthdr->len - (hlen + n80211HeaderLength);
 
 	ieee80211_radiotap_iterator_init(&rti, 
 		(struct ieee80211_radiotap_header *)rtpkt, bytes);
 	
 	while ((n = ieee80211_radiotap_iterator_next(&rti)) == 0) {
-
             switch (rti.this_arg_index) {
             case IEEE80211_RADIOTAP_RATE:
                 ri.rate = (*rti.this_arg);
@@ -70,19 +70,22 @@ static void core_mi_recv_frame(u_char *argc,
 			case IEEE80211_RADIOTAP_DBM_ANTNOISE:
 				ri.noise = (*rti.this_arg);
 				break;
-
+			case IEEE80211_RADIOTAP_FLAGS:
+				ri.flags = (*rti.this_arg);
+				len -= 4;
             }
 	}
-	printf("RX: Rate: %2d.%dMbps, Freq: %dMHz, Signal:% ddBm, Noise: %ddBm\n",
-			ri.rate / 2, 5*(ri.rate & 1), ri.channel, ri.power, ri.noise);
 
-	len = pkthdr->len;
+	len -= hlen;
+	p += hlen;
+
+	//printf("RX: Rate: %2d.%dMbps, Freq: %dMHz, Signal:% ddBm, Noise: %ddBm\n",
+	//		ri.rate / 2, 5*(ri.rate & 1), ri.channel, ri.power, ri.noise);
 
 	if (_mfn->mon_frame_handler) {
 		_mfn->rate = ri.rate;
-		_mfn->mon_frame_handler(_mfn, buf, len, mi, ri.power);
+		_mfn->mon_frame_handler(_mfn, p, len, mi, ri.power);
 	}
-
 }
 
 /* Tap interface frame send/recv function */

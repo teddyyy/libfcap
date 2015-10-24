@@ -86,11 +86,11 @@
 #define	CTRL_PS_POLL	0xA
 #define	CTRL_RTS	0xB
 #define	CTRL_CTS	0xC
-#define	CTRL_ACK	0xD
+#define	CTRL_ACK	0xD4
 #define	CTRL_CF_END	0xE
 #define	CTRL_END_ACK	0xF
 
-#define	DATA_DATA		0x0
+#define	DATA_DATA		0x08
 #define	DATA_DATA_CF_ACK	0x1
 #define	DATA_DATA_CF_POLL	0x2
 #define	DATA_DATA_CF_ACK_POLL	0x3
@@ -143,7 +143,7 @@ struct mgmt_header_t {
 	u_int8_t	sa[6];
 	u_int8_t	bssid[6];
 	u_int16_t	seq_ctrl;
-};
+}__attribute__((packed));
 
 u_int16_t	qos_params;
 

@@ -13,9 +13,9 @@ struct mif *_mi_in, *_mi_out;
 struct tif *_ti_in, *_ti_out;
 
 // Default value
-#define DEFAULT_WIRELESS_IFACE  "mon0"
+#define DEFAULT_WIRELESS_IFACE  "wlan1"
 #define DEFAULT_ESSID           "hoge"
-#define DEFAULT_CHANNEL         36
+#define DEFAULT_CHANNEL         44
 #define DEFAULT_IP_ADDRESS      "10.0.0.1"
 #define DEFAULT_MAC_ADDRESS      "aa:bb:cc:dd:ee:00"
 
@@ -24,6 +24,7 @@ struct tif *_ti_in, *_ti_out;
 #define MACADDR_TYPE(x) u_int8_t x[6]
 #define MACADDR_TYPE_SZ (sizeof(u_int8_t)*6)
 #define MAC_ADDRESS_NULL (u_int8_t *) "\0\0\0\0\0\0"
+#define f_MACADDR "%02X:%02X:%02X:%02X:%02X:%02X"
 
 // IP address
 #define IPADDR_TYPE(x) u_int8_t x[4]
@@ -31,6 +32,7 @@ struct tif *_ti_in, *_ti_out;
 
 // Data rate
 #define EID_SUPPORTED_RATES_LENGHT 8
+#define EID_SUPPORTED_RATES_EXT_LENGHT 4
 #define RATE_1M 1000000
 #define RATE_2M 2000000
 #define RATE_5_5M 5500000

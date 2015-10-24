@@ -7,26 +7,25 @@ struct tx_info {
 
 struct rx_info {
    	u_int64_t mactime;
-   	int32_t power;
-   	int32_t noise;
+   	int8_t power;
+   	int8_t noise;
     u_int32_t channel;
    	u_int32_t freq;
    	u_int32_t rate;
   	u_int32_t antenna;
+	int flags;
 } __packed;
 
 struct mif {
 	int (*read)(struct mif *mi, unsigned char *h80211, 
 				int len, struct rx_info *ri);
 	int (*write)(struct mif *mi, unsigned char *h80211, 
-				int len, struct tx_info *ti);
-
+				int count, struct tx_info *ti);
 	void *mi_priv;
 	char mi_interface[IFNAMSIZ];
-	pcap_t *pcap_dev;
-	int ieee80211_len;
 };
 
 struct mif *mi_open(char *iface);
 void mi_close(struct mif *mi);
-pcap_t* mi_fd(struct mif *mi);
+pcap_t* mi_fd_in(struct mif *mi);
+pcap_t* mi_fd_out(struct mif *mi);

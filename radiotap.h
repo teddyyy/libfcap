@@ -20,12 +20,12 @@ struct ieee80211_radiotap_iterator {
 	struct ieee80211_radiotap_header *rtheader;
 	int max_length;
 	int this_arg_index;
-	unsigned char *this_arg;
+	u8 *this_arg;
 
 	int arg_index;
-	unsigned char *arg;
+	u8 *arg;
 	__le32 *next_bitmap;
-	__le32 bitmap_shifter;
+	u32 bitmap_shifter;
 };
 
 int ieee80211_radiotap_iterator_init(
@@ -35,3 +35,4 @@ int ieee80211_radiotap_iterator_init(
 
 int ieee80211_radiotap_iterator_next(
    struct ieee80211_radiotap_iterator *iterator);
+

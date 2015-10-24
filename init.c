@@ -61,11 +61,11 @@ int init_fcap(int argc, char** argv)
 	_mi_out = (struct mif *)mi_open(config.wifi_iface);
 	if (!_mi_out)
 		return 1;
-	dev.fd_out = mi_fd(_mi_out);
+	dev.fd_out = mi_fd_out(_mi_out);
+	dev.fd_in = mi_fd_in(_mi_out);
 
 	/* Same interface for input and output */
     _mi_in = _mi_out;
-    dev.fd_in = dev.fd_out;
 
 	/* open output and input tap interface */
     _ti_out = (struct tif *) ti_open(NULL);
@@ -99,7 +99,7 @@ int init_fcap(int argc, char** argv)
     eb = event_init();
 
 	/* Initalize events */
-    event_set(&evti, dev.ti_in, EV_READ, ti_recv_frame, &evti);
+    event_set(&evti, dev.ti_in, EV_READ, core_ti_recv_frame, &evti);
 
 	/* Add it to the active events, without a timeout */
     event_add(&evti, NULL);

@@ -46,6 +46,24 @@
 /* Base version of the radiotap packet header data */
 #define PKTHDR_RADIOTAP_VERSION		0
 
+typedef unsigned int u32;
+typedef unsigned short u16;
+typedef unsigned char u8; 
+typedef u32 __le32;
+
+#if __BYTE_ORDER == __LITTLE_ENDIAN
+#define le16_to_cpu(x) (x)
+#define le32_to_cpu(x) (x)
+#else
+#define le16_to_cpu(x) ((((x)&0xff)<<8)|(((x)&0xff00)>>8))
+#define le32_to_cpu(x) \
+((((x)&0xff)<<24)|(((x)&0xff00)<<8)|(((x)&0xff0000)>>8)|(((x)&0xff000000)>>24))
+#endif
+#define unlikely(x) (x)
+
+#define MAX_PENUMBRA_INTERFACES 8
+
+
 /* A generic radio capture format is desirable. There is one for
  * Linux, but it is neither rigidly defined (there were not even
  * units given for some fields) nor easily extensible.
@@ -70,12 +88,12 @@
  * All data in the header is little endian on all platforms.
  */
 struct ieee80211_radiotap_header {
-	unsigned char it_version;		/* Version 0. Only increases
-				 		 * for drastic changes,
-				 		 * introduction of compatible
-				   		 * new fields does not count.
-				 		 */
-	unsigned char it_pad;
+	u8 it_version;		/* Version 0. Only increases
+				 * for drastic changes,
+				 * introduction of compatible
+				 * new fields does not count.
+				 */
+	u8 it_pad;
 	__le16 it_len;		/* length of the whole
 				 * header in bytes, including
 				 * it_version, it_pad,
@@ -223,8 +241,8 @@ enum ieee80211_radiotap_type {
 
 /* For IEEE80211_RADIOTAP_FLAGS */
 #define	IEEE80211_RADIOTAP_F_CFP	0x01	/* sent/received
-						 				     * during CFP
-						 					 */
+						 * during CFP
+						 */
 #define	IEEE80211_RADIOTAP_F_SHORTPRE	0x02	/* sent/received
 						 * with short
 						 * preamble

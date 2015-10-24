@@ -4,8 +4,9 @@
  * Copyright 2007		Andy Green <andy@warmcat.com>
  */
 
+#include "fcap.h"
+#include <errno.h>
 #include "radiotap.h"
-#include "core.h"
 
 /**
  * ieee80211_radiotap_iterator_init - radiotap parser iterator initialization
