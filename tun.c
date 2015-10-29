@@ -120,7 +120,6 @@ static int ti_open_iface(struct tif *ti, char *name)
 
 static int ti_fd(struct tif *ti)
 {
-	printf("%s\n", __func__);
    	struct priv_tun_if *priv = ti_priv(ti);
 
    	return priv->fd;
@@ -138,7 +137,6 @@ static int ti_read(struct tif *ti, void *buf, int len)
 {
 	int size;
    	
-	printf("%s\n", __func__);
 	size = read(ti_fd(ti), buf, len);
 
    	return size;
@@ -146,7 +144,6 @@ static int ti_read(struct tif *ti, void *buf, int len)
 
 static int ti_write(struct tif *ti, void *buf, int len)
 {
-	printf("%s\n", __func__);
    	return write(ti_fd(ti), buf, len);
 }
 

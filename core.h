@@ -18,4 +18,5 @@ typedef u32 __le32;
 void* frame_monitor(void* arg);
 int core_mi_send_frame(void *buf, size_t count, int rate);
 void core_ti_recv_frame(int fd, short event, void *arg);
+int core_ti_send_frame(void *buf, size_t count);
 void periodic_func(int fd, short event, void *arg);

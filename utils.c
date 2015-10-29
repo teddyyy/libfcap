@@ -15,12 +15,19 @@ static int _sthexa_to_int(char c)
     return 0;
 }
 
-static int is_same_mac(MACADDR_TYPE(a), MACADDR_TYPE(b))
+int is_same_mac(MACADDR_TYPE(a), MACADDR_TYPE(b))
 {
     if (a == NULL || b == NULL)
         return 0;
     /* MAC addresses are 6 bytes long */
     return (memcmp(a, b, 6 * sizeof(u_int8_t)) == 0);
+}
+
+int is_same_ssid(u_char *a, u_char *b)
+{
+    if (strlen((char *)a) != strlen((char *)b))
+        return 0;
+    return (memcmp(a, b, strlen((char *)a)*sizeof(u_char)) == 0);
 }
 
 void ato_mac_address(MACADDR_TYPE(macaddr), char *s)

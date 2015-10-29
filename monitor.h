@@ -33,7 +33,7 @@ struct monitor_fn_t {
 
     int (*mon_frame_handler)(struct monitor_fn_t *mfn,
 								const u_char *pkt, int len, 
-								struct mif *mi, int rssi);
+								struct mif *mi, int rssi, int subtype);
     int (*mon_tx_tun_frame)(struct monitor_fn_t *mfn,
 								u_char *pkt, int len, struct mif *mi);
 

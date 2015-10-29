@@ -108,6 +108,7 @@ struct mif *mi_open(char *iface)
 	struct mif *mi;	
 	struct priv_if *pi;
 	pcap_t *pkt_in, *pkt_out;
+	struct bpf_program bpfprogram;
 	char errbuf[PCAP_ERRBUF_SIZE];
 
 	/* setup mi struct */
@@ -129,6 +130,9 @@ struct mif *mi_open(char *iface)
 		printf("Device %s doesn't provide 80211 radiotap header\n", iface);
 		return NULL;
 	}  
+
+	pcap_compile(pkt_in, &bpfprogram, "not wlan type ctl subtype beacon", 1, 0);
+	pcap_setfilter(pkt_in, &bpfprogram);
 
 	if (pcap_setnonblock(pkt_in, 1, errbuf) == -1) {
 		printf("Device %s doesn't set non-blocking mode\n", iface);

@@ -10,6 +10,7 @@
 #include "tun.h"
 #include "monitor.h"
 #include "radiotap.h"
+#include "ieee802_11.h"
 
 struct event_arg {
 	struct event ev;
@@ -31,29 +32,33 @@ int core_mi_send_frame(void *buf, size_t count, int rate)
 	return 0;
 }
 
+
 // pktin --> mon --> frame translate --> tap
 static void core_mi_recv_frame(u_char *argc, 
 					const struct pcap_pkthdr *pkthdr, const u_char *pkt)
 {
-   	int n, len, bytes, n80211HeaderLength = HEADERLENGTH;
+   	int ret, num, subtype, len, bytes;
 	struct ieee80211_radiotap_iterator rti;
 	u16 hlen;
 	struct rx_info ri;
 	struct mif *mi = _mi_in;
 	const u_char *p, *rtpkt = pkt;
 
+	if (pkthdr->len < 62)
+		return;
+
 	// restore pointer and length
 	p = rtpkt;
-	len = pkthdr->len;
+	len = pkthdr->caplen;
 
 	// extract radiotap headder
-	hlen = rtpkt[2] + (rtpkt[3] << 8);
-	bytes = pkthdr->len - (hlen + n80211HeaderLength);
+	num = hlen = rtpkt[2] + (rtpkt[3] << 8);
+	bytes = pkthdr->len - (hlen + HEADERLENGTH);
 
 	ieee80211_radiotap_iterator_init(&rti, 
 		(struct ieee80211_radiotap_header *)rtpkt, bytes);
 	
-	while ((n = ieee80211_radiotap_iterator_next(&rti)) == 0) {
+	while ((ret = ieee80211_radiotap_iterator_next(&rti)) == 0) {
             switch (rti.this_arg_index) {
             case IEEE80211_RADIOTAP_RATE:
                 ri.rate = (*rti.this_arg);
@@ -70,23 +75,30 @@ static void core_mi_recv_frame(u_char *argc,
 			case IEEE80211_RADIOTAP_DBM_ANTNOISE:
 				ri.noise = (*rti.this_arg);
 				break;
-			case IEEE80211_RADIOTAP_FLAGS:
-				ri.flags = (*rti.this_arg);
-				len -= 4;
             }
 	}
 
-	len -= hlen;
-	p += hlen;
+	// extract subtype field
+	subtype = p[num];
+
+	// why why why ?
+	if ((subtype == 0x00) || (subtype == 0x20) ||(subtype == 0xb0))
+		p += 25;	
+
+	// decap radiotap header
+	p += rti.max_length;
+	len -= rti.max_length;
 
 	//printf("RX: Rate: %2d.%dMbps, Freq: %dMHz, Signal:% ddBm, Noise: %ddBm\n",
 	//		ri.rate / 2, 5*(ri.rate & 1), ri.channel, ri.power, ri.noise);
 
 	if (_mfn->mon_frame_handler) {
 		_mfn->rate = ri.rate;
-		_mfn->mon_frame_handler(_mfn, p, len, mi, ri.power);
+		_mfn->mon_frame_handler(_mfn, p, len, mi, ri.power, subtype);
 	}
+
 }
+
 
 /* Tap interface frame send/recv function */
 // pkt encapsulated ether header
@@ -107,7 +119,6 @@ void core_ti_recv_frame(int fd, short event, void *arg)
    	int len;
    	struct event *ev = arg;
 
-	printf("%s\n", __func__);
 	event_add(ev, NULL);
 
 	struct mif *mi = _mi_in;

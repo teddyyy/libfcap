@@ -109,7 +109,7 @@ int init_fcap(int argc, char** argv)
 		tv.tv_usec = _mfn->time_beacon;
        	tv.tv_sec = 0;
        	evtimer_add(&evtimer, &tv);
-    }
+   }
 
 	event_dispatch();
 	pthread_join(th, NULL);
