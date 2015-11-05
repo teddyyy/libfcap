@@ -9,16 +9,15 @@
 #include "interface.h"
 #include "tun.h"
 #include "monitor.h"
-#include "radiotap.h"
-#include "ieee802_11.h"
+#include "include/radiotap.h"
+#include "include/ieee802_11.h"
 
 struct event_arg {
 	struct event ev;
 	void *arg;
 };
 
-/* Monitor interface frame send/recv function */
-// pkt encapsulated 802.11 header
+// pkt encapsulated radiotap header
 int core_mi_send_frame(void *buf, size_t count, int rate)
 {
 	struct mif *mi = _mi_out;
@@ -34,10 +33,9 @@ int core_mi_send_frame(void *buf, size_t count, int rate)
 
 
 // pktin --> mon --> frame translate --> tap
-static void core_mi_recv_frame(u_char *argc, 
-					const struct pcap_pkthdr *pkthdr, const u_char *pkt)
+static void core_mi_recv_frame(const struct pcap_pkthdr *pkthdr, const u_char *pkt)
 {
-   	int ret, num, subtype, len, bytes;
+   	int ret, subtype, len;
 	struct ieee80211_radiotap_iterator rti;
 	u16 hlen;
 	struct rx_info ri;
@@ -52,11 +50,10 @@ static void core_mi_recv_frame(u_char *argc,
 	len = pkthdr->caplen;
 
 	// extract radiotap headder
-	num = hlen = rtpkt[2] + (rtpkt[3] << 8);
-	bytes = pkthdr->len - (hlen + HEADERLENGTH);
+	hlen = rtpkt[2] + (rtpkt[3] << 8);
 
 	ieee80211_radiotap_iterator_init(&rti, 
-		(struct ieee80211_radiotap_header *)rtpkt, bytes);
+		(struct ieee80211_radiotap_header *)rtpkt, pkthdr->len - (hlen + HEADERLENGTH));
 	
 	while ((ret = ieee80211_radiotap_iterator_next(&rti)) == 0) {
             switch (rti.this_arg_index) {
@@ -75,15 +72,21 @@ static void core_mi_recv_frame(u_char *argc,
 			case IEEE80211_RADIOTAP_DBM_ANTNOISE:
 				ri.noise = (*rti.this_arg);
 				break;
+			 case IEEE80211_RADIOTAP_FLAGS:
+				if (*rti.this_arg & IEEE80211_RADIOTAP_F_FCS)
+					len -= 4;
+				if (*rti.this_arg & IEEE80211_RADIOTAP_F_RX_BADFCS)
+					return;
+				
+				break;
             }
 	}
 
 	// extract subtype field
-	subtype = p[num];
+	subtype = p[hlen];
 
-	// why why why ?
-	if ((subtype == 0x00) || (subtype == 0x20) ||(subtype == 0xb0))
-		p += 25;	
+	//if ((subtype == 0xb0) || (subtype == 0x00) || (subtype == 0x20))
+	//	p += 25;	
 
 	// decap radiotap header
 	p += rti.max_length;
@@ -99,8 +102,6 @@ static void core_mi_recv_frame(u_char *argc,
 
 }
 
-
-/* Tap interface frame send/recv function */
 // pkt encapsulated ether header
 int core_ti_send_frame(void *buf, size_t count)
 {
@@ -148,8 +149,26 @@ void periodic_func(int fd, short event, void *arg)
 
 void* frame_monitor(void* arg)
 {
+	struct pcap_pkthdr *hdr;
+	const u_char *pkt;
+	int ret;
+
 	printf("%s\n", __func__);
-	pcap_loop(dev.fd_in, -1, core_mi_recv_frame, NULL);
+
+	for (;;) {
+		ret = pcap_next_ex(dev.fd_in, &hdr, &pkt);
+
+		if (ret == -2)
+			break;
+
+		if (ret == -1) {
+			fprintf(stderr, "pcap_next_ex failure\n");
+			break;
+		}
+
+		if (ret == 1) 
+			core_mi_recv_frame(hdr, pkt);	
+	}	
 
 	return 0;
 }

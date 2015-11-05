@@ -32,7 +32,7 @@ static void sigint_handler()
 }
 
 /*  main entry */
-int init_fcap(int argc, char** argv)
+int init_fcap(int argc, char** argv, int channel)
 {
 	pthread_t th;
 	struct event evti, evtimer;
@@ -44,16 +44,17 @@ int init_fcap(int argc, char** argv)
 
 	signal(SIGINT, sigint_handler);
 
+   	config.channel = channel;
+	printf("%d\n", config.channel);
+
 	/* set default config value */
 	memset(&config, '\0', sizeof(struct config_values));
 	strcpy(config.wifi_iface, DEFAULT_WIRELESS_IFACE);
 	printf("%s\n", config.wifi_iface);
-    config.channel = DEFAULT_CHANNEL;
-	printf("%d\n", config.channel);
-    ato_ip_address(config.ip_address, DEFAULT_IP_ADDRESS);
-	printf("%s\n", DEFAULT_IP_ADDRESS);
+
 	strcpy(config.essid, DEFAULT_ESSID);
 	printf("%s\n", config.essid);
+
 	ato_mac_address(config.mac_address, DEFAULT_MAC_ADDRESS);
 	printf("%s\n", DEFAULT_MAC_ADDRESS);
 

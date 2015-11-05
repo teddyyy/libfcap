@@ -9,28 +9,15 @@ struct ap_conf
     int freq;
     int rate;
     int tx_power;
-	int encryption;
-    char key_wep[256];
     unsigned short interval;
     u_int16_t capability;
     u_int64_t timestamp;
     int seq_ctrl; // we must track sequence number in a per-AP basis, if possible
-    int nbpackets_ti;
     u_char rates_supp[EID_SUPPORTED_RATES_LENGHT];
 	u_char rates_supp_ext[EID_SUPPORTED_RATES_EXT_LENGHT];
 };
 
 struct monitor_fn_t {
-	/* Device functions for received packets 
-    void (*assoc_response)(struct monitor_fn_t *mfn, u_char *pkt, int len, int rssi);
-    void (*reassoc_response)(struct monitor_fn_t *mfn, u_char *pkt, int len, int rssi);
-    void (*probe_response)(struct monitor_fn_t *mfn, u_char *pkt, int len, int rssi);
-    void (*authentication)(struct monitor_fn_t *mfn, u_char *pkt, int len, int rssi);
-    void (*beacon)(struct monitor_fn_t *mfn, u_char *pkt, int len, int rssi);
-    void (*data)(struct monitor_fn_t *mfn, u_char *pkt, int len, int rssi);
-    void (*ti_receive)(struct monitor_fn_t *mfn, u_char *pkt, int len);
-	*/
-
     int (*mon_frame_handler)(struct monitor_fn_t *mfn,
 								const u_char *pkt, int len, 
 								struct mif *mi, int rssi, int subtype);

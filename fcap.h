@@ -15,9 +15,8 @@ struct tif *_ti_in, *_ti_out;
 // Default value
 #define DEFAULT_WIRELESS_IFACE  "mon0"
 #define DEFAULT_ESSID           "hoge"
-#define DEFAULT_CHANNEL         149 
-#define DEFAULT_IP_ADDRESS      "10.0.0.1"
-#define DEFAULT_MAC_ADDRESS      "aa:bb:cc:dd:ee:00"
+#define DEFAULT_CHANNEL         36
+#define DEFAULT_MAC_ADDRESS		"aa:bb:cc:dd:ee:00"
 
 // Mac address
 #define MACADDR(m) (m)[0], (m)[1], (m)[2], (m)[3], (m)[4], (m)[5]
@@ -48,9 +47,6 @@ struct tif *_ti_in, *_ti_out;
 
 struct devices 
 {
-	//int fd_in, arptype_out;
-	//int fd_out, arptype_out;
-
 	pcap_t *fd_in;
 	pcap_t *fd_out;
 	
@@ -58,10 +54,10 @@ struct devices
 } dev;
 
 
-struct config_values
-{
+struct config_values {
 	MACADDR_TYPE(mac_address);
    	IPADDR_TYPE(ip_address);
+   	IPADDR_TYPE(netmask);
    	char essid[120];
    	char essid_prefix[120];
    	char wifi_iface[10];
@@ -69,5 +65,5 @@ struct config_values
 
 } config;
 
-int init_fcap(int argc, char** argv);
+int init_fcap(int argc, char** argv, int channel);
 #endif

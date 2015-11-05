@@ -3,7 +3,7 @@
 #include <string.h>
 #include <arpa/inet.h>
 
-#include "ieee802_11.h"
+#include "include/ieee802_11.h"
 
 #include "fcap.h"
 #include "core.h"
@@ -79,8 +79,6 @@ static struct monitor_fn_t *mfn_alloc(int size)
    	}
 
    	mfn->mon_frame_handler = proto80211_packet_recv;
-   	//mfn->wifi_packet_ti_recv = proto80211_packet_ti_recv;
-   	//mfn->free = wfn_free;
 
    	return mfn;
 }
@@ -90,7 +88,6 @@ static int recv_frame_tun_to_mon(struct monitor_fn_t *mfn, u_char *pkt,
 {
     /*  802.11 header for sending operations, reusable */
     unsigned char h80211[4096];
-    int offset = 0;
 
     if (len < 38)
         return -1;
@@ -99,12 +96,9 @@ static int recv_frame_tun_to_mon(struct monitor_fn_t *mfn, u_char *pkt,
 
     int packet_length = len;
 
-    memcpy(h80211, IEEE80211_LLC_SNAP, 32);
-    memcpy(h80211 + 32, pkt + 14, packet_length - 14);
-
-    /* Ether type */
-    memcpy(h80211 + 30, pkt + 12, sizeof(u_int16_t));
-    offset += sizeof(u_int16_t);
+    memcpy(h80211, IEEE80211_LLC_SNAP, 32); // copy IEEE80211 + LLC
+    memcpy(h80211 + 32, pkt + 14, packet_length - 14); // frame body without etherframe header
+    memcpy(h80211 + 30, pkt + 12, sizeof(u_int16_t)); // ether type
 
     u_int16_t ether_type;
     memcpy(&ether_type, pkt + 12, 2);

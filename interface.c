@@ -40,13 +40,14 @@ static int mi_write(struct mif *mi, unsigned char *buf,
 	int ret;
 
 	unsigned char u8aRadiotap[] = {
-        0x00, 0x00, /*  <-- radiotap version */
-        0x09, 0x00, /*  <- radiotap header length */
-        0x04, 0x00, 0x00, 0x00, /*  <-- bitmap */
-        0x00, /*  <-- rate */
+        0x00, 0x00, //  <-- radiotap version 
+        0x09, 0x00, //  <- radiotap header length
+        0x04, 0x00, 0x00, 0x00, //  <-- bitmap 
+        0x00, //  <-- rate 
     };
 
-	if ((unsigned) count > sizeof(tmpbuf)-22) return -1;
+	if ((unsigned) count > sizeof(tmpbuf) - 22) 
+		return -1;
 
 	if (ti) 
         rate = ti->ti_rate;
@@ -62,6 +63,8 @@ static int mi_write(struct mif *mi, unsigned char *buf,
     buf = tmpbuf;
 
 	ret = pcap_inject(dev->fd_out, buf, count);
+	if (ret == -1)
+		pcap_perror(dev->fd_out, 0);
 
 	return ret;
 }
@@ -108,7 +111,6 @@ struct mif *mi_open(char *iface)
 	struct mif *mi;	
 	struct priv_if *pi;
 	pcap_t *pkt_in, *pkt_out;
-	struct bpf_program bpfprogram;
 	char errbuf[PCAP_ERRBUF_SIZE];
 
 	/* setup mi struct */
@@ -120,7 +122,7 @@ struct mif *mi_open(char *iface)
 	mi->write = mi_write;
 
 	// for pkt in
-	pkt_in = pcap_open_live(iface, 800, 1, 20, errbuf);
+	pkt_in = pcap_open_live(iface, 4096, 1, 10, errbuf);
 	if (pkt_in == NULL) {
 		printf("Unable to open interface %s in pcap: %s\n", iface, errbuf);
 		return NULL;
@@ -131,16 +133,13 @@ struct mif *mi_open(char *iface)
 		return NULL;
 	}  
 
-	pcap_compile(pkt_in, &bpfprogram, "not wlan type ctl subtype beacon", 1, 0);
-	pcap_setfilter(pkt_in, &bpfprogram);
-
 	if (pcap_setnonblock(pkt_in, 1, errbuf) == -1) {
 		printf("Device %s doesn't set non-blocking mode\n", iface);
 		return NULL;
 	}
 
 	// for pkt out
-	pkt_out = pcap_open_live(iface, 800, 1, 20, errbuf);
+	pkt_out = pcap_open_live(iface, 4096, 1, 10, errbuf);
 	if (pkt_out == NULL) {
 		printf("Unable to open interface %s in pcap: %s\n", iface, errbuf);
 		return NULL;

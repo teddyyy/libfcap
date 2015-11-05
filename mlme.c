@@ -2,7 +2,7 @@
 #include <arpa/inet.h>
 
 #include "fcap.h"
-#include "ieee802_11.h"
+#include "include/ieee802_11.h"
 #include "monitor.h"
 #include "utils.h"
 #include "core.h"
@@ -206,12 +206,13 @@ void handle_assoc_request(struct monitor_fn_t *mfn, const u_char *pkt,
 	struct mgmt_header_t *header = (struct mgmt_header_t *)pkt;
 	struct ap_conf *ap = (struct ap_conf *)mfn->mfn_priv;
 
-	printf("ST_ASSOC\tsmac: "f_MACADDR", dmac: "f_MACADDR", bssid: "f_MACADDR"\n", MACADDR(header->sa), MACADDR(header->da), MACADDR(header->bssid));
-
 	if (is_same_mac(ap->mac_address, header->bssid)) {
         u_char h80211[4096];
         int pktlen = 0;
 	
+		printf("ST_ASSOC\tsmac: "f_MACADDR", dmac: "f_MACADDR", bssid: "f_MACADDR"\n", 
+			MACADDR(header->sa), MACADDR(header->da), MACADDR(header->bssid));
+
 		u_int16_t status = IEEE80211_STATUS_SUCCESS;
         u_int16_t aid = 0x0100;
 
@@ -233,6 +234,9 @@ void handle_reassoc_request(struct monitor_fn_t *mfn, const u_char *pkt,
 	struct mgmt_header_t *header = (struct mgmt_header_t *)pkt;
 	struct ap_conf *ap = (struct ap_conf *)mfn->mfn_priv;
 
+	printf("ST_REASSOC\tsmac: "f_MACADDR", dmac: "f_MACADDR", bssid: "f_MACADDR"\n", 
+			MACADDR(header->sa), MACADDR(header->da), MACADDR(header->bssid));
+
 	if (is_same_mac(ap->mac_address, header->bssid)) 
 		handle_assoc_request(mfn, pkt, len, rssi);
 }
@@ -244,7 +248,8 @@ void handle_auth_frame(struct monitor_fn_t *mfn, const u_char *pkt,
 	struct mgmt_header_t *header = (struct mgmt_header_t *)pkt;
 	struct ap_conf *ap = (struct ap_conf *)mfn->mfn_priv;	
 
-	printf("ST_AUTH\tsmac: "f_MACADDR", dmac: "f_MACADDR", bssid: "f_MACADDR"\n", MACADDR(header->sa), MACADDR(header->da), MACADDR(header->bssid));
+	printf("ST_AUTH\tsmac: "f_MACADDR", dmac: "f_MACADDR", bssid: "f_MACADDR"\n", 
+			MACADDR(header->sa), MACADDR(header->da), MACADDR(header->bssid));
 
 	if (is_same_mac(header->bssid, ap->mac_address) 
 		&& !is_same_mac(header->sa, ap->mac_address)) {
@@ -300,14 +305,15 @@ void handle_data_frame(struct monitor_fn_t *mfn, const u_char *pkt,
     struct mgmt_header_t *header = (struct mgmt_header_t *)pkt;
     struct ap_conf *ap = (struct ap_conf *)mfn->mfn_priv;
 
-	//printf("ST_DATA\tsmac: "f_MACADDR", dmac: "f_MACADDR", bssid: "f_MACADDR"\n", MACADDR(header->sa), MACADDR(header->da), MACADDR(header->bssid));
-
-	if (is_same_mac(header->da, ap->mac_address) || 
-		(is_same_mac(header->da, BROADCAST))) {
+	if (is_same_mac(header->da, ap->mac_address) || (is_same_mac(header->da, BROADCAST))
+		|| is_same_mac(header->bssid, ap->mac_address)) {
 		
 		u_int16_t fc = header->fc;
         fc = (fc & ~FC_TO_DS_BIT) | FC_FROM_DS_BIT;
         header->fc = fc;
+
+		//printf("ST_DATA\tsmac: "f_MACADDR", dmac: "f_MACADDR", bssid: "f_MACADDR"\n", 
+		//	MACADDR(header->sa), MACADDR(header->da), MACADDR(header->bssid));
 
 		unsigned char h80211[4096];
         int trailer = 0;
@@ -327,12 +333,16 @@ void handle_data_frame(struct monitor_fn_t *mfn, const u_char *pkt,
 		memcpy(&ether_type, pkt + sizeof(struct mgmt_header_t) + 6, 2); 
         ether_type = ntohs(ether_type);
 
+		// discard ipv6 packet
+		if (ether_type == 0x86dd)
+			return; 
+
 		if (len <= sizeof(struct mgmt_header_t) + 8)
             return;	
 
 		/* Copy frame body */
         memcpy(h80211 + 14, pkt + sizeof(struct mgmt_header_t) + 8, 
-				len - sizeof(struct mgmt_header_t) - 8); 
+				len - (sizeof(struct mgmt_header_t) + 8));
         len = len- sizeof(struct mgmt_header_t) - 8 + 14; 
 
 		/* ethernet frame must be atleast 60 bytes without fcs */
