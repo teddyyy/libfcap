@@ -30,6 +30,39 @@ static void mon_periodic_beacon(struct monitor_fn_t *mfn)
 
 }
 
+static void mon_csa_beacon(struct monitor_fn_t *mfn,
+							MACADDR_TYPE(addr), u_int8_t channel)
+{
+	struct ap_conf *ap = (struct ap_conf*) mfn->mfn_priv;
+	u_char h80211[4096];
+	int len = 0;
+	int switch_count = CSASWITCHCOUNT;
+
+	memset(h80211, 0, 4096);
+
+	while (switch_count > 0) {
+		len = ieee80211_framectrl_build(h80211, len, addr,
+							ap->mac_address, ap->bssid, 
+							ap_get_seq_ctrl(ap), 0x8000, 314);
+	
+		len = ieee80211_mgmt_build(h80211, len, 0x80,
+        	                ap->channel, ap->essid, ap->capability,
+            	            ap->rates_supp, ap->rates_supp_ext);
+
+		h80211[len++] = 37;					// element id
+		h80211[len++] = 3;					// length
+		h80211[len++] = 0;					// channel switch mode
+		h80211[len++] = channel;			// new channel number
+		h80211[len++] = switch_count;		// new channel number
+
+		core_mi_send_frame(h80211, len, RATE_6M/500000);
+
+		switch_count--;
+	}
+
+	return;
+}
+
 static int proto80211_packet_recv(struct monitor_fn_t *mfn, 
 									const u_char *pkt, int len, 
 									struct mif *mi, int rssi, int subtype)
@@ -159,6 +192,7 @@ struct monitor_fn_t *init_function(struct config_values *config)
 		return NULL;
 
 	mfn->periodic_beacon = mon_periodic_beacon;
+	mfn->csa_beacon	= mon_csa_beacon;
 	mfn->mon_tx_tun_frame = recv_frame_tun_to_mon;
 	mfn->time_beacon = BEACON_INTERVAL_TIMER;
 

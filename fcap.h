@@ -17,6 +17,7 @@ struct tif *_ti_in, *_ti_out;
 #define DEFAULT_ESSID           "hoge"
 #define DEFAULT_CHANNEL         36
 #define DEFAULT_MAC_ADDRESS		"aa:bb:cc:dd:ee:00"
+#define DEFAULT_AP_MSGS_PORT   	55550 
 
 // Mac address
 #define MACADDR(m) (m)[0], (m)[1], (m)[2], (m)[3], (m)[4], (m)[5]
@@ -45,14 +46,23 @@ struct tif *_ti_in, *_ti_out;
 #define BEACON_INTERVAL 0x064
 #define BEACON_INTERVAL_TIMER (BEACON_INTERVAL*1000)
 
-struct devices 
-{
+#define CSAOFFER        0x10
+#define CSACOMPLETE     0x11
+#define CSAASSOCED      0x12
+#define CSASWITCHCOUNT	10
+
+struct devices {
 	pcap_t *fd_in;
 	pcap_t *fd_out;
 	
 	int ti_in, ti_out;
 } dev;
 
+struct csahdr {
+    u_int8_t type;
+    u_int8_t channel;
+    MACADDR_TYPE(tgt_addr);
+};
 
 struct config_values {
 	MACADDR_TYPE(mac_address);
@@ -62,7 +72,7 @@ struct config_values {
    	char essid_prefix[120];
    	char wifi_iface[10];
 	int channel;
-
+	int ap_msg_port;
 } config;
 
 int init_fcap(int argc, char** argv, int channel);

@@ -25,6 +25,7 @@ struct monitor_fn_t {
 								u_char *pkt, int len, struct mif *mi);
 
     void (*periodic_beacon)(struct monitor_fn_t *mfn);
+    void (*csa_beacon)(struct monitor_fn_t *mfn, MACADDR_TYPE(addr), u_int8_t channel);
 
     void (*monitor_free)(struct monitor_fn_t *mfn);
     void (*free)(struct monitor_fn_t *mfn);
