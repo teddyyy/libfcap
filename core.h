@@ -17,6 +17,7 @@ typedef u32 __le32;
 
 int setnonblock(int fd);
 void* frame_monitor(void* arg);
+void* push_sta_info(void* arg);
 int core_mi_send_frame(void *buf, size_t count, int rate);
 void core_ti_recv_frame(int fd, short event, void *arg);
 int core_ti_send_frame(void *buf, size_t count);

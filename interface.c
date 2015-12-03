@@ -15,7 +15,7 @@ static void *mi_priv(struct mif *mi)
    	return mi->mi_priv;
 }
 
-void mi_close(struct mif *mi)
+static void mi_close(struct mif *mi)
 {
 	struct priv_if *pi = mi_priv(mi);
 
@@ -120,6 +120,7 @@ struct mif *mi_open(char *iface)
 
 	mi->read  = mi_read;
 	mi->write = mi_write;
+	mi->close = mi_close;
 
 	// for pkt in
 	pkt_in = pcap_open_live(iface, 4096, 1, 10, errbuf);

@@ -21,11 +21,11 @@ struct mif {
 				int len, struct rx_info *ri);
 	int (*write)(struct mif *mi, unsigned char *h80211, 
 				int count, struct tx_info *ti);
+	void (*close)(struct mif *mi);
 	void *mi_priv;
 	char mi_interface[IFNAMSIZ];
 };
 
 struct mif *mi_open(char *iface);
-void mi_close(struct mif *mi);
 pcap_t* mi_fd_in(struct mif *mi);
 pcap_t* mi_fd_out(struct mif *mi);

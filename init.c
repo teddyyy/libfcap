@@ -1,6 +1,7 @@
 #include <event.h>
 #include <signal.h>
 #include <pcap.h>
+#include <syslog.h>
 #include <pthread.h>
 
 #include "fcap.h"
@@ -19,14 +20,21 @@ static void sigint_handler()
 	if (eb) 
 		event_base_free(eb);
 
-	if (_mi_out > 0)
-		mi_close(_mi_out);
-	
-	if (_ti_out > 0)
-		ti_close(_ti_out);
+	if (_mi_out > 0) {
+		struct mif *mi = _mi_out;
+		mi->close(mi);
+	}
+/*	
+	if (_ti_out > 0) {
+		struct tif *ti = _ti_out;
+		ti->close(ti);
+	}
+*/
 
-	if (_mfn)
-		_mfn->free(_mfn);
+	if (_mfn) 
+        _mfn->free(_mfn);
+
+	log_write(LOG_DEBUG, "fcapd stopping...");
 
 	exit (0);
 }
@@ -67,7 +75,7 @@ static void init_ap_msgs(int *listen_fd)
 /*  main entry */
 int init_fcap(int argc, char** argv, int channel)
 {
-	pthread_t th;
+	pthread_t th, systh;
 	struct event evti, evai, evtimer;
 	struct timeval tv;
 	int listen_fd;
@@ -77,6 +85,7 @@ int init_fcap(int argc, char** argv, int channel)
 	init_timer = time(NULL);
 
 	signal(SIGINT, sigint_handler);
+	signal(SIGTERM, sigint_handler);
 
    	config.channel = channel;
 	printf("%d\n", config.channel);
@@ -130,12 +139,16 @@ int init_fcap(int argc, char** argv, int channel)
 	_mfn = (struct monitor_fn_t *)init_function(&config);
 	_mfn->dv_ti = _ti_out;
 
+	// open log
+	log_open(PG_NAME);
+	log_write(LOG_DEBUG, "fcapd starting...");
 
 	// Initalize ap message
 	init_ap_msgs(&listen_fd);
 
 	// start posix thread
 	pthread_create(&th, NULL, frame_monitor, NULL);
+	pthread_create(&systh, NULL, push_sta_info, NULL);
 	
 	/* Initalize the event library */
     eb = event_init();
@@ -157,6 +170,9 @@ int init_fcap(int argc, char** argv, int channel)
 
 	event_dispatch();
 	pthread_join(th, NULL);
+	pthread_join(systh, NULL);
+
+	log_close();
 
 	return 0;
 }

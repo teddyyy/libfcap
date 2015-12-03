@@ -24,7 +24,7 @@ struct priv_tun_if {
 
 static void *ti_priv(struct tif *ti)
 {
-   	return ti->tif_priv;
+   	return ti->ti_priv;
 }
 
 static char *ti_name(struct tif *ti)
@@ -59,7 +59,7 @@ int ti_set_up(struct tif *ti)
 
 	printf("%s\n", __func__);
 
-    memset(&ifreq,0,sizeof(struct ifreq));
+    memset(&ifreq, 0, sizeof(struct ifreq));
     strncpy(ifreq.ifr_name, ti_name(ti), IFNAMSIZ);
 
      /*  get flags */
@@ -150,11 +150,11 @@ static int ti_write(struct tif *ti, void *buf, int len)
 }
 
 
-void ti_close(struct tif *ti)
+static void ti_close(struct tif *ti)
 {
    	struct priv_tun_if *priv = ti_priv(ti);
 
-   	close(priv->fd);
+	close(priv->fd);
    	close(priv->ti_ioctls);
    	ti_do_free(ti);
 }
@@ -176,7 +176,7 @@ static struct tif *ti_alloc(int sz)
         return NULL;
     }
     memset(priv, 0, sz);
-    ti->tif_priv = priv;
+    ti->ti_priv = priv;
 
     return ti;
 }
@@ -198,8 +198,10 @@ struct tif *ti_open(char *iface)
     ti = ti_alloc(sizeof(*priv));
     if (!ti)
         return NULL;
+
 	ti->read = ti_read;	
 	ti->write = ti_write;
+	ti->close = ti_close;
 	ti->fd	= ti_fd;
 	
 	/* setup iface */

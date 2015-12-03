@@ -1,5 +1,6 @@
 #include <string.h>
 #include <sys/types.h>
+#include <syslog.h>
 
 #include "fcap.h"
 #include "utils.h"
@@ -54,5 +55,20 @@ void ato_ip_address(IPADDR_TYPE(ipaddr), char *s)
         }
         i++; j++;
     }
+}
+
+void log_open(const char* name) 
+{
+    openlog(name, LOG_PID, LOG_USER);
+}
+
+void log_write(int priority, const char* const message) 
+{
+    syslog(priority, "%s", message);
+}
+
+void log_close() 
+{
+    closelog();
 }
 

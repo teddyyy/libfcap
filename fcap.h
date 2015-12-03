@@ -13,6 +13,7 @@ struct mif *_mi_in, *_mi_out;
 struct tif *_ti_in, *_ti_out;
 
 // Default value
+#define PG_NAME					"fcapd"
 #define DEFAULT_WIRELESS_IFACE  "mon0"
 #define DEFAULT_ESSID           "hoge"
 #define DEFAULT_CHANNEL         36
@@ -46,10 +47,11 @@ struct tif *_ti_in, *_ti_out;
 #define BEACON_INTERVAL 0x064
 #define BEACON_INTERVAL_TIMER (BEACON_INTERVAL*1000)
 
-#define CSAOFFER        0x10
-#define CSACOMPLETE     0x11
-#define CSAASSOCED      0x12
-#define CSASWITCHCOUNT	10
+#define CSASENDOFFER        0x10
+#define CSAASSOCOFFER      	0x11                                                 
+#define CSACOMPLETE         0x20
+#define CSAASSOCED          0x21
+#define CSASWITCHCOUNT		10
 
 struct devices {
 	pcap_t *fd_in;
